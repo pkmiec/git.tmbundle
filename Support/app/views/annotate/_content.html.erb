@@ -5,26 +5,29 @@
   range_min, range_max = selected_line_range
 
   formatted_annotations = annotations.map do |annotation|
-    line_class = []
+    is_insertion = annotation[:rev] == "-current-" || annotation[:rev] == revision
+    
+    ln_class = []
 
-    if (range_min == range_max) && range_min == annotation[:ln].to_i
-      line_class << "selected"
-    elsif range_min == annotation[:ln].to_i
-      line_class << "ranged-top"
-    elsif range_max == annotation[:ln].to_i
-      line_class << "ranged-bottom"
-    elsif annotation[:ln].to_i.between?(range_min, range_max)
-      line_class << "ranged-middle"
+    if annotation[:ln].to_i.between?(range_min, range_max)
+      ln_class << "code-line--selected"
     end
 
-    line_class << "ins" if annotation[:rev] == "-current-" || annotation[:rev] == revision
-    line_class = line_class * " "
+    text_class = []
+    text_class << "code-line--ins" if is_insertion
+    
+    if is_insertion
+      text = htmlize_highlight_trailing_whitespace(annotation[:text])
+    else
+      text = htmlize(annotation[:text])
+    end
+    
     formatted_line = {
       :rev => annotation[:rev], 
-      :author => annotation[:author], 
+      :author => annotation[:author],  
       :date => relative_date(annotation[:date]), 
       :ln => annotation[:ln], 
-      :text => annotation[:text]
+      :text => text,
     }
     display = formatted_line.dup
   
@@ -32,50 +35,63 @@
   
     friendly_date = annotation[:date].is_a?(Time) ? annotation[:date].to_friendly : annotation[:date]
   
-    display[:rev_tooltip] = <<EOF
-  Revision: #{annotation[:rev]}
-  Date: #{friendly_date} (#{display[:date]})
-  Author: #{annotation[:author]}
-EOF
-    display[:line_class] = line_class
+    display[:rev_tooltip] = ""
+    display[:text_class] = text_class.join(' ')
+    display[:ln_class] = ln_class.join(' ')
     
     last_formatted_line = formatted_line
     display
   end
 %>
 
-<code>
+<% unless @as_partial %><div id='content' style='margin-top:4em;'><% end %>
 
-<% unless @as_partial %><div id='content' style='margin-top:60px;'><% end %>
+<!-- 
+  wrapping in table to allows the code div to extend as much as it needs to horizontally
+  resulting in a horizontal scrollbar on the page rather than on code__content. this is 
+  nicer experience since there is only one code div when annotating.
+-->
+<table style="min-width:100%;">
+  <tr>
+    <td>
 
-<table class='codediff inline'>
-  <thead>
-    <tr>
-      <td class='line-numbers'>revision</td>
-      <td class='line-numbers'>author</td>
-      <td class='line-numbers'>date</td>
-      <td class='line-numbers'>line</td>
-      <td/>
-    </tr>
-  </thead>
-  <tbody>
+<div class="code">
+  <div class="code__gutter">
     <% for display in formatted_annotations %>
-      <tr id="line-<%= display[:ln] %>">
-      
-        <td class="line-numbers">
-          <% if display[:rev]=="…" %>
-            <%= display[:rev] %>
-          <% else %>
-            <%= link_to_function display[:rev], "show_annotation('#{display[:rev]}');", :title => htmlize_attr(display[:rev_tooltip]) %>
-          <% end %>
-        </td>
-        <td class="line-numbers"><%= make_non_breaking display[:author] %></td>
-        <td class="line-numbers"><%= make_non_breaking display[:date] %></td>
-        <td class="line-numbers"><%= display[:ln] %></td>
-        <td class="code <%= display[:line_class] %>"><%= htmlize(display[:text]) %></td>
-      </tr>
+      <div id="line-<%= display[:ln] %>" class="code-line">
+        <% if display[:rev]=="…" %>
+          <%= display[:rev] %>
+        <% else %>
+          <%= link_to_function display[:rev], "show_annotation('#{display[:rev]}');", :title => htmlize_attr(display[:rev_tooltip]) %>
+        <% end %>
+      </div>
     <% end %>
-    </tbody>
-  </table>
+  </div>
+  <div class="code__gutter">
+    <% for display in formatted_annotations %>
+      <div class="code-line"><%= display[:author] %></div>
+    <% end %>
+  </div>
+  <div class="code__gutter">
+    <% for display in formatted_annotations %>
+      <div class="code-line"><%= display[:date] %></div>
+    <% end %>
+  </div>
+  <div class="code__gutter">
+    <% for display in formatted_annotations %>
+      <div class="code-line <%= display[:ln_class] %>"><%= display[:ln] %></div>
+    <% end %>
+  </div>
+  <div class="code__content">
+    <% for display in formatted_annotations %>
+      <div class="code-line <%= display[:text_class] %>"><%= display[:text] %></div>
+    <% end %>
+  </div>
+</div>
+
+    </td>
+  </tr>
+</table>
+
+
 <% unless @as_partial %></div><!-- end div#content --><% end %>
-</code>

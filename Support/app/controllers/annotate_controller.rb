@@ -3,6 +3,8 @@
 class AnnotateController < ApplicationController
   include DateHelpers
   include AnnotateHelper
+  include DiffHelper
+  
   layout "application", :except => "update"
   def index
     @file_path = params[:file_path] || ENV['TM_FILEPATH']

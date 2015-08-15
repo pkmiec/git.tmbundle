@@ -19,46 +19,52 @@
     
     file_path_right ? link_to_relative_file(git, file_path_right, start_line_right) : git.root_relative_path_for(file_path)
   end
+  
+  formatted_diff_results = []
+  diff_result[:lines].each do |line|
+    next if @diff_line_count >= Git::DEFAULT_DIFF_LIMIT
+    @diff_line_count += 1
+
+    ln_class, code_class = classes_for_line_type(line[:type])
+    
+    if line[:type] == :insertion
+      text = htmlize_highlight_trailing_whitespace(line[:text])
+    else
+      text = htmlize(line[:text])
+    end
+
+    ln_right = line[:ln_right]
+    ln_right = link_to_relative_file(git, diff_result[:right][:file_path], ln_right, ln_right) unless [ :deletion, :eof, :cut ].include?(line[:type])
+    
+    formatted_diff_results << {
+      :ln_left => line[:ln_left],
+      :ln_right => ln_right,
+      :ln_class => ln_class,
+      :text => text,
+      :text_class => code_class,
+    }
+  end
 %>
 
 <h4><%= files.uniq * ' --&gt; ' %></h4>
-<table class='codediff inline'>
-  <thead>
-    <tr>
-      <td class='line-numbers'><%= open_links[:left] %></td>
-      <td class='line-numbers'><%= open_links[:right] %></td>
-      <td/>
-    </tr>
-  </thead>
-  <tbody>
-    <% diff_result[:lines].each do |line|
-      next if @diff_line_count >= Git::DEFAULT_DIFF_LIMIT
-      @diff_line_count += 1
-      text = line[:text]
-      escape_html = true
 
-      line_num_class, row_class = case line[:type]
-        when :insertion
-          text = htmlize_highlight_trailing_whitespace(text)
-          escape_html = false # set to false since the above function escapes HTML
-          ["", "ins"]
-
-        when :deletion then ["", "del"]
-        when :eof then ["line-num-eof", "eof"]
-        when :cut then ["line-num-cut", "cut-line"]
-        else
-          ["", "unchanged"]
-      end
-
-      text = htmlize(text) if escape_html
-
-      ln_right = line[:ln_right]
-      ln_right = link_to_relative_file(git, diff_result[:right][:file_path], ln_right, ln_right) unless [ :deletion, :eof, :cut ].include?(line[:type])
-    %>
-        <tr>
-          <td class="line-numbers <%= line_num_class %>"><%= line[:ln_left] %></td>
-          <td class="line-numbers <%= line_num_class %>"><%= ln_right %></td>
-          <td class="code <%= row_class %>"><%= text %></td></tr>
+<div class="code">
+  <div class="code__gutter">
+    <div class="code-line code-line--header"><%= open_links[:left] %></div>
+    <% for diff_result in formatted_diff_results %>
+      <div class="code-line <%= diff_result[:ln_class] %>"><%= diff_result[:ln_left] %></div>
     <% end %>
-  </tbody>
-</table>
+  </div>
+  <div class="code__gutter">
+    <div class="code-line code-line--header"><%= open_links[:right] %></div>
+    <% for diff_result in formatted_diff_results %>
+      <div class="code-line <%= diff_result[:ln_class] %>"><%= diff_result[:ln_right] %></div>
+    <% end %>
+  </div>
+  <div class="code__content">
+    <div class="code-line code-line--header"></div>
+    <% for diff_result in formatted_diff_results %>
+      <div class="code-line <%= diff_result[:text_class] %>"><%= diff_result[:text] %></div>
+    <% end %>
+  </div>
+</div>

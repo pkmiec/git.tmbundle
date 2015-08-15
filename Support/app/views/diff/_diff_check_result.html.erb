@@ -1,31 +1,34 @@
-<table class='codediff inline'>
-  <thead>
-    <tr>
-			<td/>
-      <td><%= link_to_relative_file(git, diff_result[:file_path], diff_result[:file_line]) %></td>
-    </tr>
-  </thead>
-  <tbody>
-    <% diff_result[:lines].each do |line|
-      next if @diff_line_count >= Git::DEFAULT_DIFF_LIMIT
-      @diff_line_count += 1
-      line_num_class, row_class = case line[:type]
-        when :deletion then ["", "del"]
-        when :insertion then ["", "ins"]
-        when :eof then ["line-num-eof", "eof"]
-        when :cut then ["line-num-cut", "cut-line"]
-        else
-          ["", "unchanged"]
-      end
-      %>
-        <tr>
-          <td class="line-numbers del"></td>
-          <td class="code del"><%= htmlize(diff_result[:warning]) %></td>
-        </tr>
-        <tr>
-          <td class="line-numbers <%= line_num_class %>"><%= diff_result[:file_line] %></td>
-          <td class="code <%= row_class %>"><%= htmlize(line[:text]) %></td>
-        </tr>
+<%
+  formatted_diff_results = []
+  diff_result[:lines].each do |line|
+    next if @diff_line_count >= Git::DEFAULT_DIFF_LIMIT
+    @diff_line_count += 1
+    
+    ln_class, text_class = classes_for_line_type(line[:type])
+    
+    formatted_diff_results << {
+      :file_line => line[:file_line],
+      :ln_class => ln_class,
+      :text => text,
+      :text_class => code_class,
+      :warning => line[:warning]
+    }
+  end
+%>
+
+<div class="code">
+  <div class="code__gutter">
+    <div class="code-line code-line--header"></div>
+    <% for diff_result in formatted_diff_results %>
+      <div class="code-line code-line--del"></div>
+      <div class="code-line <%= diff_result[:ln_class] %>"><%= diff_result[:file_line] %></div>
     <% end %>
-  </tbody>
-</table>
+  </div>
+  <div class="code__content">
+    <div class="code-line code-line--header"><%= link_to_relative_file(git, diff_result[:file_path], diff_result[:file_line]) %></div>
+    <% for diff_result in formatted_diff_results %>
+      <div class="code-line code-line--del"><%= htmlize(diff_result[:warning]) %></div>
+      <div class="code-line <%= diff_result[:text_class] %>"><%= htmlize(diff_result[:text]) %></div>
+    <% end %>
+  </div>
+</div>
