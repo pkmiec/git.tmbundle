@@ -3,6 +3,17 @@
 
 <% content_for :javascript do %>
   <script type='text/javascript'>
+    function set_title(revEl) 
+    {
+      if (revEl.title == "") {
+        var rev = revEl.innerText;
+        var revOption = $("rev-" + rev);
+        if (revOption) {
+          revEl.title = revOption.getAttribute('data-msg');
+        }
+      }
+    }
+
     function show_annotation(revision)
     {
       var filepath = document.querySelector('option[value="' + revision + '"]').readAttribute('data-filepath');

@@ -35,7 +35,6 @@
   
     friendly_date = annotation[:date].is_a?(Time) ? annotation[:date].to_friendly : annotation[:date]
   
-    display[:rev_tooltip] = ""
     display[:text_class] = text_class.join(' ')
     display[:ln_class] = ln_class.join(' ')
     
@@ -62,7 +61,7 @@
         <% if display[:rev]=="…" %>
           <%= display[:rev] %>
         <% else %>
-          <%= link_to_function display[:rev], "show_annotation('#{display[:rev]}');", :title => htmlize_attr(display[:rev_tooltip]) %>
+          <%= link_to_function display[:rev], "show_annotation('#{display[:rev]}');", :onmouseenter => "set_title(this)" %>
         <% end %>
       </div>
     <% end %>
