@@ -1,5 +1,10 @@
+require LIB_ROOT + '/show_in_github.rb'
+
 class MiscController < ApplicationController
   layout "application", :only => [:init]
+  
+  include AnnotateHelper
+  
   def init
     puts "<h2>Initializing Git Repository in #{ENV['TM_PROJECT_DIRECTORY']}</h2>"
     puts htmlize(git.init(ENV["TM_PROJECT_DIRECTORY"]))
@@ -21,6 +26,12 @@ class MiscController < ApplicationController
       puts "Unable to find Gitnub.  Use the config dialog to set the Gitnub path to where you've installed it."
       output_show_tool_tip
     end
+  end
+  
+  def github
+    show_in_github = ShowInGithub.new
+    url = show_in_github.url_for(ENV['TM_FILEPATH'], selected_line_range)
+    puts `open "#{url}"`
   end
   
   def gitx
