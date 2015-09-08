@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+require LIB_ROOT + '/show_in_github.rb'
+
 class AnnotateController < ApplicationController
   include DateHelpers
   include AnnotateHelper
@@ -35,5 +37,11 @@ class AnnotateController < ApplicationController
       # f.content annotations
      render "_content", :locals => { :annotations => @annotations, :revision => revision } 
      render "_select_revision", :locals => { :revision => revision}
+  end
+  
+  def open_file
+    show_in_github = ShowInGithub.new
+    url = show_in_github.url_for(params[:file_path], params[:revision], nil)
+    puts `open "#{url}"`
   end
 end

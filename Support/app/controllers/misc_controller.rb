@@ -30,7 +30,7 @@ class MiscController < ApplicationController
   
   def github
     show_in_github = ShowInGithub.new
-    url = show_in_github.url_for(ENV['TM_FILEPATH'], selected_line_range)
+    url = show_in_github.url_for(ENV['TM_FILEPATH'], nil, selected_line_range)
     puts `open "#{url}"`
   end
   

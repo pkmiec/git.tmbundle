@@ -75,8 +75,7 @@
           dispatch({controller: 'log', action: 'create_branch_from_revision', revision: $F('rev') })
           break;
         case 111: // o
-          dispatch({controller: 'log', action: 'open_revision', file_path: "<%=e_js ENV['TM_FILEPATH'] %>", revision: $F('rev') })
-          // 
+          dispatch({controller: 'annotate', action: 'open_file', file_path: "<%=e_js ENV['TM_FILEPATH'] %>", revision: $F('rev') })
           break;
         case 116: // t
           dispatch({controller: 'log', action: 'create_tag_from_revision', file_path: "<%=e_js ENV['TM_FILEPATH'] %>", revision: $F('rev') })

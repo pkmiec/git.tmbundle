@@ -8,8 +8,10 @@ class ShowInGithub
     @git = Git.new
   end
   
-  def url_for(file_path, selected_line_range = nil)
-    url = file_to_github_url(file_path, best_github_remote)
+  def url_for(file_path, branch = nil, selected_line_range = nil)
+    branch ||= @git.branch.current.name.to_s
+    
+    url = file_to_github_url(file_path, branch, best_github_remote)
     url = URI.escape(url)
     if selected_line_range
       url += "##{selected_line_range.uniq.map { |l| "L#{l}" }.join('-')}"
@@ -32,10 +34,9 @@ class ShowInGithub
     return 
   end
   
-  def file_to_github_url(file, github_remote, branch = nil)
+  def file_to_github_url(file, branch, github_remote)
     relative_path = @git.relative_path_for(file)
     repo = repo_for_remote(github_remote)
-    branch ||= @git.branch.current.name.to_s
 
     user_project = user_project_from_repo(repo)
     if user_project
